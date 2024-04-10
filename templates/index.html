@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Main</title>
+
+        <style>
+            .container {
+                width: 90%;
+                border: 2px solid black;
+                height: 1rem;
+                padding: 2rem;
+                margin: 1rem;
+            }
+        </style>
+    </head>
+
+
+    <body>
+        <h2>Bone Cancer Detection</h2>
+        <p id="choosen"></p>
+
+        <form id="form1" class="container">
+            <input type="file" accept="image/*" name="img" id="img1" />
+            <input type="submit" />
+        </form>
+
+        <p id="result"></p>
+    </body>
+
+    <script>
+        document.getElementById("img1").addEventListener('change', () => {
+
+            const file = document.getElementById('img1').files[0]
+
+            const choosen_image = document.createElement('img')
+            choosen_image.alt = "Choosen Image"
+            choosen_image.src = URL.createObjectURL(file)
+            const anchor = document.getElementById('choosen')
+            anchor.replaceChildren();
+            anchor.appendChild(choosen_image)
+
+            document.getElementById('result').replaceChildren();
+        })
+
+        document.getElementById("form1").addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+
+            const file = document.getElementById('img1').files[0]
+
+            if (file != undefined) {
+                var formdata = new FormData()
+                formdata.append("img", file)
+                const res = await fetch('/model', {
+                    method: 'POST',
+                    body: formdata
+                })
+                console.log(res)
+
+                const data = await res.json();
+                console.log(data)
+                if (data['success'] == 1) { // generation is done
+                    const byteCharacters = atob(data['image']);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const image = document.createElement('img')
+                    image.alt = "Result"
+                    image.src = URL.createObjectURL(new Blob([byteArray], { type: 'image/jpg' }));
+                    document.getElementById('result').appendChild(image)
+                }
+            }
+        })
+
+    </script>
+
+</html>
